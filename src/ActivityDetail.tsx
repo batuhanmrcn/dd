@@ -1,0 +1,20 @@
+import { useState } from 'react';
+import type { Activity, Template, Section } from './types';
+import { SECTION_TYPES } from './types';
+import { formatDate } from './domain';
+import { Badge, Icon, Modal } from './ui';
+function Flow({section}:{section:Section}) {
+ const [active,setActive]=useState(section.blocks?.[0]?.id??'');
+ const block=section.blocks?.find(b=>b.id===active)??section.blocks?.[0];
+ return <><div className="flow-tabs">{section.blocks?.map(b=><button key={b.id} className={b.id===block?.id?'active':''} onClick={()=>setActive(b.id)}>{b.title}</button>)}</div>{block?<><h4>{block.title}</h4><p className="preserve">{block.content||'Bu adımın içeriği henüz eklenmedi.'}</p></>:<p className="muted">Ders akışı henüz eklenmedi.</p>}</>;
+}
+export function ActivityDetail({item,className,onClose,onEdit,onDelete}:{item:Template|Activity;className?:string;onClose:()=>void;onEdit?:()=>void;onDelete?:()=>void}) {
+ const [tab,setTab]=useState('detail');
+ return <Modal title={item.title} onClose={onClose} wide><div className="detail-cover"><span className={`activity-symbol ${item.color}`}><Icon name={item.color==='sage'?'leaf':item.color==='peach'?'puzzle':'lightbulb'} size={30}/></span><div><div className="eyebrow">{item.category}</div><p>{'date' in item?formatDate(item.date,{day:'numeric',month:'long',weekday:'long'}):'Şablon önizlemesi'}{className&&` · ${className}`}</p></div></div>
+ <div className="detail-tabs"><button className={tab==='detail'?'active':''} onClick={()=>setTab('detail')}>Ders detayı</button><button className={tab==='evaluation'?'active':''} onClick={()=>setTab('evaluation')}>Değerlendirme</button></div>
+ {tab==='evaluation'?<div className="empty"><div className="empty-icon"><Icon name="chart" size={32}/></div><Badge tone="sand">Yakında</Badge><h3>Değerlendirme yakında</h3><p>Bu alan görsel önizlemedir. Öğrenci değerlendirmesi ve sonuç kaydı sonraki aşamada eklenecek.</p></div>:<div className="detail-sections">{item.sections.map(s=><section className={`detail-section section-${s.kind}`} key={s.id}><h3><span className="section-icon"><Icon name={SECTION_TYPES.find(t=>t.kind===s.kind)?.icon??'layers'}/></span>{s.title}</h3>
+ {s.kind==='flow'?<Flow section={s}/>:s.kind==='book'?<div className="book-preview"><div className="book-cover"><Icon name="leaf" size={28}/><strong>{s.content||'Haftanın kitabı'}</strong><small>BİRLİKTE KEŞFEDELİM</small></div><div><Badge tone="sand">Görsel önizleme</Badge><h4>{s.content||'Kitap seçimi yakında'}</h4><button disabled className="button subtle small">Kitabı aç <Icon name="arrow" size={16}/></button><p className="muted small-text">Kaynak açma bu sürümde bulunmuyor.</p></div></div>:s.kind==='resources'?<div className="resource-placeholder"><Icon name="play" size={24}/><div><strong>Müzik / video bağlantısı</strong><p>Kaynak ekleme sonraki aşamada</p></div><Badge>Yakında</Badge></div>:s.kind==='evaluation'?<><Badge tone="sand">Görsel önizleme</Badge><p className="preserve">{s.content||'Değerlendirme soruları ve sonuç kaydı daha sonra eklenecek.'}</p></>:s.kind==='concepts'||s.kind==='outcomes'?<div className="chips">{s.content.split('\n').filter(Boolean).map((line,i)=><span key={i} className={s.kind==='outcomes'?'outcome-chip':'concept-chip'}>{line}</span>)}{!s.content&&<p className="muted">Henüz içerik eklenmedi.</p>}</div>:s.kind==='materials'?<ul className="materials-list">{s.content.split('\n').filter(Boolean).map((line,i)=><li key={i}>{line}</li>)}{!s.content&&<li>Henüz materyal eklenmedi.</li>}</ul>:<p className="preserve">{s.content||'Henüz içerik eklenmedi.'}</p>}
+ </section>)}</div>}
+ {(onEdit||onDelete)&&<div className="modal-footer"><span className="grow muted small-text">{('locked' in item&&item.locked)?'Orijinal şablon korunur.':'Yalnızca bu kayıt değişir.'}</span>{onDelete&&<button className="button danger-button" onClick={onDelete}><Icon name="trash" size={16}/>Etkinliği kaldır</button>}{onEdit&&<button className="button primary" onClick={onEdit}><Icon name="edit" size={16}/>{'date' in item?'Etkinliği düzenle':item.locked?'Kopyasını düzenle':'Şablonu düzenle'}</button>}</div>}
+ </Modal>;
+}

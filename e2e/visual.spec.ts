@@ -1,0 +1,23 @@
+import { test, expect } from '@playwright/test';
+test('masaüstü ve dar mobil ekranlarda görsel doğrulama',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/');await page.evaluate(()=>document.fonts.ready);
+ await page.screenshot({path:'artifacts/admin.png',fullPage:true});
+ await page.getByRole('button',{name:'Şablon kütüphanesi',exact:true}).click();
+ await page.screenshot({path:'artifacts/templates.png',fullPage:true});
+ await page.getByRole('button',{name:'Haftalık plan',exact:true}).click();
+ await page.screenshot({path:'artifacts/planner.png',fullPage:true});
+ await page.getByLabel('Görünüm rolü').selectOption('parent');
+ await page.setViewportSize({width:390,height:844});
+ await page.screenshot({path:'artifacts/mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'Ceviz ile Toplama Çıkarma',exact:true}).first().click();
+ await page.screenshot({path:'artifacts/activity.png'});
+ const modal=page.getByRole('dialog');
+ expect(await modal.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+ await page.getByRole('button',{name:'Pencereyi kapat'}).click();
+ await page.setViewportSize({width:320,height:740});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.getByRole('button',{name:'Aylık',exact:true}).click();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ expect(errors).toEqual([]);
+});

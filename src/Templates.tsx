@@ -1,0 +1,13 @@
+import { useState } from 'react';
+import type { Template } from './types';
+import { Badge, Empty, Icon, PageHead } from './ui';
+export function Templates({templates,onPreview,onEdit,onNew}:{templates:Template[];onPreview:(t:Template)=>void;onEdit:(t:Template)=>void;onNew:()=>void}) {
+ const [search,setSearch]=useState('');const [filter,setFilter]=useState('all');
+ const shown=templates.filter(t=>t.title.toLocaleLowerCase('tr').includes(search.toLocaleLowerCase('tr'))&&(filter==='all'||(filter==='mine'?!t.locked:t.locked)));
+ return <><PageHead eyebrow="İLHAM VEREN BAŞLANGIÇLAR" title="Şablon kütüphanesi" description="Her güzel etkinlik, iyi bir fikirle başlar."><button className="button primary" onClick={onNew}><Icon name="plus" size={18}/>Yeni şablon</button></PageHead>
+ <div className="library-banner"><div className="banner-icon"><Icon name="layers" size={26}/></div><div><h3>Bir kez hazırlayın, her hafta ilham alın.</h3><p>Hazır şablonları kopyalayın, bölümleri sınıfınıza göre özelleştirin.</p></div><Badge>Orijinaller korunur <Icon name="lock" size={12}/></Badge></div>
+ <div className="section-toolbar"><div className="pills">{[['all','Tüm şablonlar'],['ready','Hazır şablonlar'],['mine','Şablonlarım']].map(([key,label])=><button key={key} onClick={()=>setFilter(key)} className={filter===key?'active':''}>{label}</button>)}</div><label className="search-box"><Icon name="search" size={18}/><input aria-label="Şablon ara" placeholder="Şablonlarda ara…" value={search} onChange={e=>setSearch(e.target.value)}/></label></div>
+ <div className="template-grid">{shown.map(t=><article className="template-card" key={t.id}><button className={`template-art ${t.color}`} onClick={()=>onPreview(t)} aria-label={`${t.title} önizlemesi`}><div className="art-shape shape-one"/><div className="art-shape shape-two"/><Icon name={t.id.startsWith('template')?'layers':t.color==='sage'?'leaf':t.color==='peach'?'puzzle':'lightbulb'} size={58}/><span className="template-label">{t.locked?'HAZIR ŞABLON':'SİZE ÖZEL'}</span></button><div className="template-body"><span className="category-text">{t.category}</span><h3>{t.title}</h3><p>{t.sections.length} bölüm <span>·</span> Esnek içerik yapısı</p><div className="template-footer"><button className="text-button" onClick={()=>onPreview(t)}>İncele <Icon name="arrow" size={15}/></button><button className="button secondary small" aria-label={`${t.title} ${t.locked?'kopyasını düzenle':'düzenle'}`} onClick={()=>onEdit(t)}><Icon name={t.locked?'copy':'edit'} size={15}/>{t.locked?'Kopyala & düzenle':'Düzenle'}</button></div></div></article>)}</div>
+ {!shown.length&&<Empty title="Henüz bir şablon yok" description="Yeni bir şablon oluşturun veya aramanızı değiştirin."/>}
+ </>;
+}
